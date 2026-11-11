@@ -165,6 +165,7 @@ async def _create_or_replay(
                 {"product_id": item.product_id, "quantity": item.quantity}
                 for item in payload.items
             ],
+            total_cents,
             created_at,
         )
         session.add(
@@ -239,13 +240,11 @@ async def create_order(
         request_hash,
         payload,
     )
-    await _confirmation_lead(context.notification_delay_ms)
     return JSONResponse(
         status_code=201,
         content=snapshot,
         headers={"Location": f"/api/v1/orders/{snapshot['id']}"},
     )
-
 
 @router.get("/api/v1/orders/{order_id}")
 async def get_order(
