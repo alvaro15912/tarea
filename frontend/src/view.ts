@@ -539,6 +539,62 @@ export function receiptPanelNodes(
 
   const notification = notificationNode(order, pollState, pollMessage);
 
+  const billingStatus = el(
+    'div',
+    { class: 'notice notice-pending', role: 'status' },
+    el('strong', {}, 'Facturación'),
+    el('p', {}, 'Consultando comprobante...')
+  );
+
+  async function consultarFactura(): Promise<void> {
+    try {
+      const response = await fetch(
+        `/api/v1/orders/${encodeURIComponent(order!.id)}/billing`,
+        { cache: 'no-store' }
+      );
+
+      if (!response.ok) {
+        throw new Error('No se pudo consultar la facturación');
+      }
+
+      const data = await response.json();
+
+      if (data.status === 'issued' && typeof data.invoice_id === 'string') {
+        billingStatus.className = 'notice notice-sent';
+        billingStatus.replaceChildren(
+          el('strong', {}, 'Factura emitida'),
+          el('p', {}, `ID: ${data.invoice_id}`),
+          el('p', {}, 'Comprobante interno de demostración')
+        );
+      } else {
+        billingStatus.className = 'notice notice-pending';
+        billingStatus.replaceChildren(
+          el('strong', {}, 'Facturación pendiente'),
+          el('p', {}, `Estado: ${String(data.status)}`),
+          el('button', { type: 'button', class: 'button button-secondary' }, 'Actualizar factura')
+        );
+        const button = billingStatus.querySelector('button');
+        button?.addEventListener('click', () => {
+          void consultarFactura();
+        }, { once: true });
+      }
+    } catch {
+      billingStatus.replaceChildren(
+        el('strong', {}, 'No se pudo consultar la factura'),
+        el('p', {}, 'El pedido sigue confirmado. Puedes intentarlo nuevamente.'),
+        el('button', { type: 'button', class: 'button button-secondary' }, 'Reintentar consulta')
+      );
+      billingStatus.querySelector('button')?.addEventListener(
+        'click',
+        () => void consultarFactura(),
+        { once: true }
+      );
+    }
+  }
+
+  void consultarFactura();
+
+
   const items = el('ul', { class: 'receipt-items' });
   for (const line of order.items) {
     items.append(
@@ -578,6 +634,7 @@ export function receiptPanelNodes(
     banner,
     idBlock,
     notification,
+    billingStatus,
     el('h3', { class: 'section-label' }, 'Productos'),
     items,
     total,
