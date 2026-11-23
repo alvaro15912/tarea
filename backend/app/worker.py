@@ -4,7 +4,7 @@ import asyncio
 import logging
 
 from redis.asyncio import Redis
-
+from .billing_worker import billing_loop
 from .config import Settings, get_settings
 from .db import Database
 from .events import (
@@ -151,6 +151,7 @@ async def run_worker() -> None:
             relay_loop(database, client, settings),
             consumer_loop(database, client, settings),
             cleanup_loop(database, settings),
+            billing_loop(database),
         )
     finally:
         await client.aclose()

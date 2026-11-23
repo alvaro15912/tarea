@@ -22,6 +22,9 @@ export interface Elements {
   panelClose: HTMLButtonElement;
   panelBody: HTMLElement;
   toast: HTMLElement;
+  authButton: HTMLButtonElement;
+  logoutButton: HTMLButtonElement;
+  userName: HTMLElement;
 }
 
 export function buildShell(): Elements {
@@ -55,6 +58,35 @@ export function buildShell(): Elements {
   const cartCount = el('span', { class: 'cart-count', 'aria-hidden': 'true' }, '0');
   cartButton.append(icon('cart'), el('span', { class: 'cart-label' }, 'Carrito'), cartCount);
 
+  const authButton = el(
+    'button',
+    {
+      type: 'button',
+      class: 'nav-link'
+    },
+    'Iniciar sesión con Google'
+  );
+
+  const userName = el(
+    'span',
+    {
+      class: 'nav-link',
+      hidden: true
+    },
+    ''
+  );
+
+  const logoutButton = el(
+    'button',
+    {
+      type: 'button',
+      class: 'nav-link',
+      hidden: true
+    },
+    'Cerrar sesión'
+  );
+
+
   const trackButton = el(
     'button',
     { type: 'button', class: 'nav-link', 'aria-haspopup': 'dialog' },
@@ -78,6 +110,9 @@ export function buildShell(): Elements {
         { class: 'primary-nav', 'aria-label': 'Principal' },
         el('a', { class: 'nav-link', href: '#catalogo' }, 'Tienda'),
         trackButton,
+        authButton,
+        userName,
+        logoutButton,
         cartButton
       )
     )
@@ -276,6 +311,9 @@ export function buildShell(): Elements {
     cartButton,
     cartCount,
     trackButton,
+    authButton,
+    logoutButton,
+    userName,
     panel,
     panelTitle,
     panelClose,

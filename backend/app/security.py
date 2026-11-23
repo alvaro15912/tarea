@@ -23,11 +23,15 @@ from .models import Run
 
 IDEMPOTENCY_KEY_PATTERN = re.compile(r"^[A-Za-z0-9_-]{8,80}$")
 
+
 CSP_VALUE = (
     "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
     "img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; "
-    "connect-src 'self'; font-src 'self' data:; form-action 'self'"
+    "connect-src 'self' https://kziohybhbuhbvzvarzdt.supabase.co; "
+    "font-src 'self' data:; "
+    "form-action 'self' https://kziohybhbuhbvzvarzdt.supabase.co"
 )
+
 
 
 class ApiError(Exception):

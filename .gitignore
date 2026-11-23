@@ -17,3 +17,4 @@ DESIGN.md
 .impeccable/
 .bridge-probe
 *.log
+billing.secrets.local.json

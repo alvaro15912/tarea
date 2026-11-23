@@ -1,4 +1,5 @@
 import '@fontsource-variable/manrope';
+import { supabase, iniciarSesionGoogle, cerrarSesion } from './auth';
 import './styles.css';
 import { ApiError, createOrder, fetchCatalog, fetchOrder, friendlyError, isAbortError } from './api';
 import {
@@ -77,6 +78,35 @@ let toastTimer: number | null = null;
 const ui: Elements = buildShell();
 
 function start(): void {
+    ui.authButton.addEventListener('click', async () => {
+    try {
+      await iniciarSesionGoogle();
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      alert('No se pudo iniciar sesión con Google.');
+    }
+  });
+
+  ui.logoutButton.addEventListener('click', async () => {
+    try {
+      await cerrarSesion();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      alert('No se pudo cerrar sesión.');
+    }
+  });
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    const usuario = session?.user;
+
+    ui.authButton.hidden = Boolean(usuario);
+    ui.userName.hidden = !usuario;
+    ui.logoutButton.hidden = !usuario;
+
+    ui.userName.textContent = usuario
+      ? usuario.user_metadata?.full_name || usuario.email || 'Comprador'
+      : '';
+  });
   ui.search.addEventListener('input', onSearchInput);
   ui.searchClear.addEventListener('click', () => clearFilters(false));
   ui.chips.addEventListener('click', onCategoryClick);

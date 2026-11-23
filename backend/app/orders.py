@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .db import CAMPAIGN, utcnow
 from .events import build_order_created_event, iso8601
-from .models import Order, OrderItem, Outbox, Product
+from .models import BillingJob, Order, OrderItem, Outbox, Product
 from .schemas import OrderCreate
 from .security import (
     ApiError,
@@ -147,6 +147,18 @@ async def _create_or_replay(
             snapshot=snapshot,
         )
         session.add(order)
+        await session.flush()
+
+
+
+        if dataset_id == "public":
+            session.add(
+                BillingJob(
+                    order_id=order_id,
+                    status="pending",
+                    attempts=0,
+                )
+            )
 
         for item in items_out:
             session.add(
@@ -265,3 +277,41 @@ async def get_order(
     snapshot = dict(order.snapshot)
     snapshot["notification_status"] = order.notification_status
     return JSONResponse(content=snapshot)
+
+@router.get("/api/v1/orders/{order_id}/billing")
+async def get_order_billing(
+    order_id: str,
+    session: AsyncSession = Depends(get_session),
+    context: DatasetContext = Depends(dataset_context),
+) -> dict[str, Any]:
+    try:
+        identifier = uuid.UUID(order_id)
+    except (ValueError, AttributeError, TypeError):
+        raise ApiError(404, "NOT_FOUND", "Pedido no encontrado") from None
+
+    order = await session.get(Order, identifier)
+
+    if order is None or order.dataset_id != context.dataset_id:
+        raise ApiError(404, "NOT_FOUND", "Pedido no encontrado")
+
+    if context.dataset_id != "public":
+        return {
+            "order_id": str(identifier),
+            "status": "not_applicable",
+            "invoice_id": None,
+        }
+
+    job = await session.get(BillingJob, identifier)
+
+    if job is None:
+        return {
+            "order_id": str(identifier),
+            "status": "pending",
+            "invoice_id": None,
+        }
+
+    return {
+        "order_id": str(identifier),
+        "status": job.status,
+        "invoice_id": job.invoice_id,
+    }

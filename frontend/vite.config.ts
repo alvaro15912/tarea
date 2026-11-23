@@ -13,7 +13,7 @@ function contentSecurityPolicy(): Plugin {
           attrs: {
             'http-equiv': 'Content-Security-Policy',
             content:
-              "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+              "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://kziohybhbuhbvzvarzdt.supabase.co; base-uri 'self'; form-action 'self' https://kziohybhbuhbvzvarzdt.supabase.co; object-src 'none'"
           },
           injectTo: 'head-prepend'
         }
